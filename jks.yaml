@@ -1,0 +1,36 @@
+- name: Retrieve JKS File
+  run: |
+    mkdir -p $HOME/.jks
+    cp keystore.jks $HOME/.jks/
+
+- name: Set up Flutter
+  uses: subosito/flutter-action@v9
+  with:
+    flutter-version: '2.5.2'  # Replace with your Flutter version
+
+- name: Install Dependencies
+  run: flutter pub get
+
+- name: Build APK
+  run: flutter build apk --release
+
+- name: Sign APK
+  run: |
+    jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore $HOME/.jks/keystore.jks -storepass ${{ secrets.JKS_PASSWORD }} -keypass ${{ secrets.KEY_PASSWORD }} -signedjar app-release-signed.apk build/app/outputs/flutter-apk/app-release.apk ${{ secrets.KEY_ALIAS }}
+
+- name: Zipalign APK  #optional
+  run: zipalign -v 4 app-release-signed.apk app-release-aligned.apk
+
+- name: Rename APK with Date
+  run: |
+     # Get the current date in YYYYMMDD format
+     current_date=$(date +'%Y%m%d')
+
+     # Rename the APK file with the current date
+     mv build/app/outputs/dev/flutter-apk/app-release-aligned.apk "build/app/outputs/dev/flutter-apk/app-release-${current_date}.apk"
+ 
+- name: Archive APK Artifact
+  uses: actions/upload-artifact@v2
+  with:
+    name: flutter-build
+    path: build/app/outputs/dev/flutter-apk/app-aligned-*.apk

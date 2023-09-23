@@ -1,0 +1,18 @@
+on:
+  push:
+    branches:
+      - main  # Change this to your main branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Retrieve JKS File
+        run: |
+          mkdir -p $HOME/.jks
+          pwd
+          cp test/hello.txt $HOME/.jks/
